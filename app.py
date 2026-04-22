@@ -513,8 +513,7 @@ with tab_cond_os:
 st.subheader("⚡ Segnali Operativi — Edge Distillato dalla Ricerca")
 st.markdown("""
 Lo studio del comportamento di VIX e S&P 500 dopo gli estremi del VVIX ha evidenziato
-due **pattern statisticamente robusti**. Le regole seguenti sintetizzano i setup con
-il profilo rischio/rendimento più favorevole emerso dall'analisi storica.
+**4 pattern statisticamente robusti** basati sul regime di mercato (VIX). 
 
 > ⚠️ Queste regole hanno finalità di **ricerca quantitativa** e non costituiscono
 > consulenza finanziaria. Ogni operatività deve essere calata nel proprio risk management.
@@ -522,166 +521,149 @@ il profilo rischio/rendimento più favorevole emerso dall'analisi storica.
 
 # ─── Cards Edge ────────────────────────────────────────────────────────────────
 col_r1, col_r2 = st.columns(2)
+col_r3, col_r4 = st.columns(2)
 
 with col_r1:
     st.markdown(
         """
-        <div style="background:#2a1515;border-left:4px solid #F44336;
-                    padding:18px 20px;border-radius:8px;height:100%;">
-          <h4 style="color:#F44336;margin:0 0 12px 0;">
-            🔴 Regola 1 — VVIX Overbought → Short Volatilità
-          </h4>
-          <p style="color:#E0E0E0;margin:0 0 8px 0;">
-            <b>Filtro:</b> VVIX zScore ≥ soglia OB &amp; VIX tra 15 e 30
-          </p>
-          <p style="color:#E0E0E0;margin:0 0 8px 0;">
-            <b>Edge:</b> il VIX tende a calare sistematicamente nei 20–60 giorni
-            successivi al segnale. Hit rate storicamente &gt;65%,
-            Profit Factor &gt;2.0 sulla finestra 20–60 giorni.
-          </p>
-          <p style="color:#9E9E9E;margin:0;font-size:0.88em;">
-            <i>Operatività tipica:</i> short VXX/UVXY · sell VIX call spread ·
-            sell premium (straddle/strangle SPX)
-          </p>
+        <div style="background:#2a1515;border-left:4px solid #F44336; padding:18px 20px;border-radius:8px;height:100%;margin-bottom:15px;">
+          <h4 style="color:#F44336;margin:0 0 12px 0;">🔴 Regola 1 — Short Volatilità</h4>
+          <p style="color:#E0E0E0;margin:0 0 8px 0;"><b>Filtro:</b> VVIX zScore ≥ soglia OB & 15 ≤ VIX < 20</p>
+          <p style="color:#9E9E9E;margin:0;font-size:0.88em;"><i>Edge:</i> Mean reversion della volatilità in regime normale. Call spread su VIX o premium selling su SPX.</p>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """, unsafe_allow_html=True
+    )
+
+with col_r3:
+    st.markdown(
+        """
+        <div style="background:#3d0c0c;border-left:4px solid #D32F2F; padding:18px 20px;border-radius:8px;height:100%;">
+          <h4 style="color:#D32F2F;margin:0 0 12px 0;">🩸 Regola 3 — Blow-off Top (Panico)</h4>
+          <p style="color:#E0E0E0;margin:0 0 8px 0;"><b>Filtro:</b> VVIX zScore ≥ soglia OB & VIX ≥ 20</p>
+          <p style="color:#9E9E9E;margin:0;font-size:0.88em;"><i>Edge:</i> Collasso violento dell'IV. Esaurimento panico. Short massiccio di VIX/UVXY o Iron Condor SPX.</p>
+        </div>
+        """, unsafe_allow_html=True
     )
 
 with col_r2:
     st.markdown(
         """
-        <div style="background:#152a15;border-left:4px solid #4CAF50;
-                    padding:18px 20px;border-radius:8px;height:100%;">
-          <h4 style="color:#4CAF50;margin:0 0 12px 0;">
-            🟢 Regola 2 — VVIX Oversold + VIX &lt; 15 → Cautela / Long Vol
-          </h4>
-          <p style="color:#E0E0E0;margin:0 0 8px 0;">
-            <b>Filtro:</b> VVIX zScore ≤ soglia OS &amp; VIX &lt; 15 (complacenza)
-          </p>
-          <p style="color:#E0E0E0;margin:0 0 8px 0;">
-            <b>Edge:</b> SPX flat/debole e VIX potenzialmente in risalita.
-            Ambiente di volatilità compressa con fear index anomalmente basso
-            = zona di rischio latente da presidiare con hedge.
-          </p>
-          <p style="color:#9E9E9E;margin:0;font-size:0.88em;">
-            <i>Operatività tipica:</i> long VIX calls / VXX ·
-            riduzione esposizione delta SPX · hedging portafoglio opzioni
-          </p>
+        <div style="background:#152a15;border-left:4px solid #4CAF50; padding:18px 20px;border-radius:8px;height:100%;margin-bottom:15px;">
+          <h4 style="color:#4CAF50;margin:0 0 12px 0;">🟢 Regola 2 — Complacenza / Long Vol</h4>
+          <p style="color:#E0E0E0;margin:0 0 8px 0;"><b>Filtro:</b> VVIX zScore ≤ soglia OS & VIX < 15</p>
+          <p style="color:#9E9E9E;margin:0;font-size:0.88em;"><i>Edge:</i> Rischio latente. Long VIX calls / hedging di portafogli a delta positivo.</p>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """, unsafe_allow_html=True
+    )
+
+with col_r4:
+    st.markdown(
+        """
+        <div style="background:#2a2a15;border-left:4px solid #FFC107; padding:18px 20px;border-radius:8px;height:100%;">
+          <h4 style="color:#FFC107;margin:0 0 12px 0;">🟡 Regola 4 — VIX Pop (Quiete pre-tempesta)</h4>
+          <p style="color:#E0E0E0;margin:0 0 8px 0;"><b>Filtro:</b> VVIX zScore ≤ soglia OS & 15 ≤ VIX < 20</p>
+          <p style="color:#9E9E9E;margin:0;font-size:0.88em;"><i>Edge:</i> Spike tattico del VIX a breve termine (5-15 gg). Long VIX Call a breve scadenza.</p>
+        </div>
+        """, unsafe_allow_html=True
     )
 
 st.markdown("")  # spacer
 
-# ─── Helper: VIX regime label ─────────────────────────────────────────────────
+
+# ─── Helper: VIX regime label e format options ────────────────────────────────
 def _vix_regime(v: float) -> str:
     if v < 15:   return "VIX < 15"
     elif v < 20: return "15–20"
     elif v < 30: return "20–30"
     else:        return "VIX ≥ 30"
 
+_fmt_rule = {
+    "Media %": "{:+.2f}", "Mediana %": "{:+.2f}",
+    "P25 %": "{:+.2f}",  "P75 %": "{:+.2f}",
+    "Std Dev %": "{:.2f}", "Hit Rate %": "{:.1f}",
+    "Profit Factor": "{:.2f}", "N": "{:.0f}",
+}
 
 # ─── Stato segnale corrente ────────────────────────────────────────────────────
 st.markdown("#### 🎯 Segnale Corrente rispetto alle Regole Operative")
 
 curr_regime = _vix_regime(curr_vix)
-rule1_active = (curr_z >= upper_thresh) and (15 <= curr_vix < 30)
+
+rule1_active = (curr_z >= upper_thresh) and (15 <= curr_vix < 20)
+rule3_active = (curr_z >= upper_thresh) and (curr_vix >= 20)
 rule2_active = (curr_z <= lower_thresh) and (curr_vix < 15)
+rule4_active = (curr_z <= lower_thresh) and (15 <= curr_vix < 20)
 
 if rule1_active:
-    st.error(
-        f"🔴 **REGOLA 1 ATTIVA** — VVIX Overbought (zScore {curr_z:.3f} ≥ {upper_thresh}) "
-        f"con VIX = {curr_vix:.2f} (regime {curr_regime}). "
-        "Setup short volatilità potenzialmente attivo."
-    )
+    st.error(f"🔴 **REGOLA 1 ATTIVA** — VVIX OB (zScore {curr_z:.3f}) & VIX {curr_vix:.2f} (Regime: {curr_regime}). Setup short volatilità.")
+elif rule3_active:
+    st.error(f"🩸 **REGOLA 3 ATTIVA** — VVIX OB (zScore {curr_z:.3f}) & VIX {curr_vix:.2f} (Regime: {curr_regime}). Setup Blow-off Top / Short panico.")
 elif rule2_active:
-    st.success(
-        f"🟢 **REGOLA 2 ATTIVA** — VVIX Oversold (zScore {curr_z:.3f} ≤ {lower_thresh}) "
-        f"con VIX = {curr_vix:.2f} (regime {curr_regime}). "
-        "Segnale di cautela: valutare hedge su portafoglio."
-    )
-elif curr_z >= upper_thresh:
-    st.warning(
-        f"🔴 VVIX Overbought (zScore {curr_z:.3f}) ma VIX = {curr_vix:.2f} fuori dal "
-        f"range 15–30 (regime: {curr_regime}). Regola 1 non soddisfatta nel filtro VIX."
-    )
-elif curr_z <= lower_thresh:
-    st.info(
-        f"🟢 VVIX Oversold (zScore {curr_z:.3f}) ma VIX = {curr_vix:.2f} non in zona "
-        f"complacenza <15 (regime: {curr_regime}). Regola 2 non soddisfatta nel filtro VIX."
-    )
+    st.success(f"🟢 **REGOLA 2 ATTIVA** — VVIX OS (zScore {curr_z:.3f}) & VIX {curr_vix:.2f} (Regime: {curr_regime}). Setup Complacenza / Valutare hedge.")
+elif rule4_active:
+    st.warning(f"🟡 **REGOLA 4 ATTIVA** — VVIX OS (zScore {curr_z:.3f}) & VIX {curr_vix:.2f} (Regime: {curr_regime}). Setup VIX Pop a breve termine.")
 else:
-    st.info(
-        f"⚪ Nessuna regola attiva — zScore corrente {curr_z:.3f} in zona neutra. "
-        f"VIX = {curr_vix:.2f} (regime: {curr_regime})."
-    )
+    st.info(f"⚪ Nessuna regola attiva — zScore {curr_z:.3f} | VIX {curr_vix:.2f}.")
 
-st.markdown("")
+st.markdown("---")
 
 # ─── Performance storica Regola 1 ─────────────────────────────────────────────
-st.markdown("#### 📊 Performance Storica — Regola 1 (VVIX OB, VIX 15–30)")
+st.markdown("#### 🔴 Performance Storica — Regola 1 (VVIX OB, VIX 15–20)")
 
 r1_subset = fwd_returns[
     (fwd_returns["signal"] == "overbought") &
     (fwd_returns["vix_at_signal"] >= 15) &
-    (fwd_returns["vix_at_signal"] < 30)
+    (fwd_returns["vix_at_signal"] < 20)
 ]
 n_r1 = len(r1_subset)
 
 if n_r1 < MIN_EVENTS:
-    st.warning(
-        f"⚠️ Solo **{n_r1}** eventi per Regola 1 con i parametri correnti. "
-        "Prova ad abbassare la soglia OB o ridurre il cooldown per ampliare il campione."
-    )
+    st.warning("⚠️ Campione insufficiente per Regola 1 con i parametri correnti.")
 else:
-    st.markdown(
-        f"Campione: **{n_r1} eventi** (OB con VIX 15–30) | "
-        f"Periodo: {r1_subset.index.min().strftime('%b %Y')} – "
-        f"{r1_subset.index.max().strftime('%b %Y')}"
-    )
+    st.markdown(f"Campione: **{n_r1} eventi** (OB con VIX 15–20)")
     col_r1a, col_r1b = st.columns(2)
-
-    _fmt_rule = {
-        "Media %": "{:+.2f}", "Mediana %": "{:+.2f}",
-        "P25 %": "{:+.2f}",  "P75 %": "{:+.2f}",
-        "Std Dev %": "{:.2f}", "Hit Rate %": "{:.1f}",
-        "Profit Factor": "{:.2f}", "N": "{:.0f}",
-    }
-
     with col_r1a:
-        st.markdown("**VIX — Rendimenti Forward (target primario)**")
+        st.markdown("**VIX — Rendimenti Forward**")
         stats_r1_vix = compute_subset_stats(r1_subset, "vix", HORIZONS)
-        st.plotly_chart(
-            build_forward_returns_bar(stats_r1_vix, "overbought", "VIX"),
-            width='stretch',
-        )
-        st.dataframe(
-            stats_r1_vix.style
-                .format(_fmt_rule)
-                .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            width='stretch',
-        )
-
+        st.plotly_chart(build_forward_returns_bar(stats_r1_vix, "overbought", "VIX"), width='stretch')
+        st.dataframe(stats_r1_vix.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
     with col_r1b:
         st.markdown("**S&P 500 — Rendimenti Forward**")
         stats_r1_spx = compute_subset_stats(r1_subset, "spx", HORIZONS)
-        st.plotly_chart(
-            build_forward_returns_bar(stats_r1_spx, "overbought", "SPX"),
-            width='stretch',
-        )
-        st.dataframe(
-            stats_r1_spx.style
-                .format(_fmt_rule)
-                .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            width='stretch',
-        )
+        st.plotly_chart(build_forward_returns_bar(stats_r1_spx, "overbought", "SPX"), width='stretch')
+        st.dataframe(stats_r1_spx.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
+
+st.markdown("")
+
+# ─── Performance storica Regola 3 ─────────────────────────────────────────────
+st.markdown("#### 🩸 Performance Storica — Regola 3 (VVIX OB, VIX ≥ 20)")
+
+r3_subset = fwd_returns[
+    (fwd_returns["signal"] == "overbought") &
+    (fwd_returns["vix_at_signal"] >= 20)
+]
+n_r3 = len(r3_subset)
+
+if n_r3 < MIN_EVENTS:
+    st.warning("⚠️ Campione insufficiente per Regola 3 con i parametri correnti.")
+else:
+    st.markdown(f"Campione: **{n_r3} eventi** (OB con VIX ≥ 20)")
+    col_r3a, col_r3b = st.columns(2)
+    with col_r3a:
+        st.markdown("**VIX — Rendimenti Forward (Collasso IV)**")
+        stats_r3_vix = compute_subset_stats(r3_subset, "vix", HORIZONS)
+        st.plotly_chart(build_forward_returns_bar(stats_r3_vix, "overbought", "VIX"), width='stretch')
+        st.dataframe(stats_r3_vix.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
+    with col_r3b:
+        st.markdown("**S&P 500 — Rendimenti Forward**")
+        stats_r3_spx = compute_subset_stats(r3_subset, "spx", HORIZONS)
+        st.plotly_chart(build_forward_returns_bar(stats_r3_spx, "overbought", "SPX"), width='stretch')
+        st.dataframe(stats_r3_spx.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
 
 st.markdown("")
 
 # ─── Performance storica Regola 2 ─────────────────────────────────────────────
-st.markdown("#### 📊 Performance Storica — Regola 2 (VVIX OS, VIX < 15)")
+st.markdown("#### 🟢 Performance Storica — Regola 2 (VVIX OS, VIX < 15)")
 
 r2_subset = fwd_returns[
     (fwd_returns["signal"] == "oversold") &
@@ -690,45 +672,48 @@ r2_subset = fwd_returns[
 n_r2 = len(r2_subset)
 
 if n_r2 < MIN_EVENTS:
-    st.warning(
-        f"⚠️ Solo **{n_r2}** eventi per Regola 2 con i parametri correnti. "
-        "Prova ad abbassare la soglia OS (in valore assoluto) o ridurre il cooldown."
-    )
+    st.warning("⚠️ Campione insufficiente per Regola 2 con i parametri correnti.")
 else:
-    st.markdown(
-        f"Campione: **{n_r2} eventi** (OS con VIX < 15) | "
-        f"Periodo: {r2_subset.index.min().strftime('%b %Y')} – "
-        f"{r2_subset.index.max().strftime('%b %Y')}"
-    )
+    st.markdown(f"Campione: **{n_r2} eventi** (OS con VIX < 15)")
     col_r2a, col_r2b = st.columns(2)
-
     with col_r2a:
-        st.markdown("**VIX — Rendimenti Forward (target: spike atteso)**")
+        st.markdown("**VIX — Rendimenti Forward**")
         stats_r2_vix = compute_subset_stats(r2_subset, "vix", HORIZONS)
-        st.plotly_chart(
-            build_forward_returns_bar(stats_r2_vix, "oversold", "VIX"),
-            width='stretch',
-        )
-        st.dataframe(
-            stats_r2_vix.style
-                .format(_fmt_rule)
-                .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            width='stretch',
-        )
-
+        st.plotly_chart(build_forward_returns_bar(stats_r2_vix, "oversold", "VIX"), width='stretch')
+        st.dataframe(stats_r2_vix.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
     with col_r2b:
         st.markdown("**S&P 500 — Rendimenti Forward**")
         stats_r2_spx = compute_subset_stats(r2_subset, "spx", HORIZONS)
-        st.plotly_chart(
-            build_forward_returns_bar(stats_r2_spx, "oversold", "SPX"),
-            width='stretch',
-        )
-        st.dataframe(
-            stats_r2_spx.style
-                .format(_fmt_rule)
-                .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            width='stretch',
-        )
+        st.plotly_chart(build_forward_returns_bar(stats_r2_spx, "oversold", "SPX"), width='stretch')
+        st.dataframe(stats_r2_spx.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
+
+st.markdown("")
+
+# ─── Performance storica Regola 4 ─────────────────────────────────────────────
+st.markdown("#### 🟡 Performance Storica — Regola 4 (VVIX OS, VIX 15–20)")
+
+r4_subset = fwd_returns[
+    (fwd_returns["signal"] == "oversold") &
+    (fwd_returns["vix_at_signal"] >= 15) &
+    (fwd_returns["vix_at_signal"] < 20)
+]
+n_r4 = len(r4_subset)
+
+if n_r4 < MIN_EVENTS:
+    st.warning("⚠️ Campione insufficiente per Regola 4 con i parametri correnti.")
+else:
+    st.markdown(f"Campione: **{n_r4} eventi** (OS con VIX 15-20)")
+    col_r4a, col_r4b = st.columns(2)
+    with col_r4a:
+        st.markdown("**VIX — Rendimenti Forward (Spike tattico)**")
+        stats_r4_vix = compute_subset_stats(r4_subset, "vix", HORIZONS)
+        st.plotly_chart(build_forward_returns_bar(stats_r4_vix, "oversold", "VIX"), width='stretch')
+        st.dataframe(stats_r4_vix.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
+    with col_r4b:
+        st.markdown("**S&P 500 — Rendimenti Forward**")
+        stats_r4_spx = compute_subset_stats(r4_subset, "spx", HORIZONS)
+        st.plotly_chart(build_forward_returns_bar(stats_r4_spx, "oversold", "SPX"), width='stretch')
+        st.dataframe(stats_r4_spx.style.format(_fmt_rule).background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"), width='stretch')
 
 st.markdown("")
 
