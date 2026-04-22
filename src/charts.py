@@ -311,13 +311,50 @@ def build_forward_returns_bar(
 
     signal_label = "Overbought (zScore ↑)" if signal_type == "overbought" else "Oversold (zScore ↓)"
 
-    text_labels = []
-    for m, hr, pf in zip(means, hit_rates, pf_vals):
+    # ── Calcolo range Y esplicito ──────────────────────────────────────────────
+    # textposition="outside" piazza le etichette OLTRE il bordo della barra
+    # (sopra per barre positive, SOTTO per barre negative). Se il range Y non
+    # include lo spazio sotto le barre negative, le etichette vengono clippate
+    # e il grafico appare "vuoto". Calcoliamo il range con padding dinamico.
+    valid_means = [m for m in means if not np.isnan(m)]
+    valid_p25   = [p for p in p25   if not np.isnan(p)]
+    valid_p75   = [p for p in p75   if not np.isnan(p)]
+
+    all_vals   = valid_means + valid_p25 + valid_p75
+    y_data_min = min(all_vals) if all_vals else -5.0
+    y_data_max = max(all_vals) if all_vals else 5.0
+    data_span  = max(abs(y_data_min), abs(y_data_max), 1.0)
+
+    # 40% di padding extra per accogliere le etichette testo fuori dalle barre
+    y_pad  = max(data_span * 0.40, 4.0)
+    y_range = [y_data_min - y_pad, y_data_max + y_pad]
+
+    # ── Etichette: testo sopra/sotto il punto 0 per visibilità garantita ──────
+    # Invece di affidarsi a textposition che clippa, usiamo annotazioni fisse
+    # al di sopra o al di sotto della linea dello zero a seconda del segno.
+    annotations = []
+    for i, (h, m, hr, pf) in enumerate(zip(horizons, means, hit_rates, pf_vals)):
         if np.isnan(m):
-            text_labels.append("N/D")
+            label = "N/D"
         else:
-            pf_str = f"{pf:.2f}" if not np.isinf(pf) else "∞"
-            text_labels.append(f"{m:+.2f}%<br>HR:{hr:.0f}% PF:{pf_str}")
+            pf_str = f"{pf:.2f}" if not (np.isinf(pf) or np.isnan(pf)) else "∞"
+            label = f"<b>{m:+.2f}%</b><br>HR:{hr:.0f}% | PF:{pf_str}"
+
+        # Posizione: sopra zero per barre positive, sotto zero per barre negative
+        y_anchor = y_data_max + y_pad * 0.15 if (not np.isnan(m) and m >= 0) else y_data_min - y_pad * 0.15
+        ay_dir   = -30 if (not np.isnan(m) and m >= 0) else 30
+
+        annotations.append(dict(
+            x=h, y=m if not np.isnan(m) else 0,
+            text=label,
+            showarrow=False,
+            yanchor="bottom" if (not np.isnan(m) and m >= 0) else "top",
+            font=dict(size=10, color=COLORS["text"]),
+            bgcolor="rgba(42,42,62,0.7)",
+            bordercolor=bar_colors[i],
+            borderwidth=1,
+            borderpad=3,
+        ))
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
@@ -334,9 +371,6 @@ def build_forward_returns_bar(
             thickness=1.8,
             width=7,
         ),
-        text=text_labels,
-        textposition="outside",
-        textfont=dict(size=10, color=COLORS["text"]),
         hovertemplate=(
             "<b>Orizzonte: %{x}</b><br>"
             "Media: %{y:.2f}%<br>"
@@ -346,12 +380,16 @@ def build_forward_returns_bar(
 
     fig.add_hline(y=0, line_dash="dot", line_color=COLORS["neutral"], line_width=1)
 
-    fig.update_layout(**_base_layout(
+    layout = _base_layout(
         title=f"{asset} — Rendimenti Forward dopo segnale {signal_label}",
         x_title="Orizzonte (giorni trading)",
         y_title="Rendimento Semplice (%)",
-    ))
-    fig.update_layout(height=420, showlegend=False)
+    )
+    layout["yaxis"]["range"] = y_range
+    layout["annotations"] = annotations
+
+    fig.update_layout(**layout)
+    fig.update_layout(height=460, showlegend=False)
     return fig
 
 
