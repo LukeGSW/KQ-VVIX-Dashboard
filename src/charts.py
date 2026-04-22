@@ -311,50 +311,32 @@ def build_forward_returns_bar(
 
     signal_label = "Overbought (zScore ↑)" if signal_type == "overbought" else "Oversold (zScore ↓)"
 
-    # ── Calcolo range Y esplicito ──────────────────────────────────────────────
-    # textposition="outside" piazza le etichette OLTRE il bordo della barra
-    # (sopra per barre positive, SOTTO per barre negative). Se il range Y non
-    # include lo spazio sotto le barre negative, le etichette vengono clippate
-    # e il grafico appare "vuoto". Calcoliamo il range con padding dinamico.
-    valid_means = [m for m in means if not np.isnan(m)]
-    valid_p25   = [p for p in p25   if not np.isnan(p)]
-    valid_p75   = [p for p in p75   if not np.isnan(p)]
-
-    all_vals   = valid_means + valid_p25 + valid_p75
-    y_data_min = min(all_vals) if all_vals else -5.0
-    y_data_max = max(all_vals) if all_vals else 5.0
-    data_span  = max(abs(y_data_min), abs(y_data_max), 1.0)
-
-    # 40% di padding extra per accogliere le etichette testo fuori dalle barre
-    y_pad  = max(data_span * 0.40, 4.0)
-    y_range = [y_data_min - y_pad, y_data_max + y_pad]
-
-    # ── Etichette: testo sopra/sotto il punto 0 per visibilità garantita ──────
-    # Invece di affidarsi a textposition che clippa, usiamo annotazioni fisse
-    # al di sopra o al di sotto della linea dello zero a seconda del segno.
-    annotations = []
-    for i, (h, m, hr, pf) in enumerate(zip(horizons, means, hit_rates, pf_vals)):
+    text_labels = []
+    for m, hr, pf in zip(means, hit_rates, pf_vals):
         if np.isnan(m):
-            label = "N/D"
+            text_labels.append("N/D")
         else:
             pf_str = f"{pf:.2f}" if not (np.isinf(pf) or np.isnan(pf)) else "∞"
-            label = f"<b>{m:+.2f}%</b><br>HR:{hr:.0f}% | PF:{pf_str}"
+            text_labels.append(f"{m:+.2f}%  HR:{hr:.0f}%  PF:{pf_str}")
 
-        # Posizione: sopra zero per barre positive, sotto zero per barre negative
-        y_anchor = y_data_max + y_pad * 0.15 if (not np.isnan(m) and m >= 0) else y_data_min - y_pad * 0.15
-        ay_dir   = -30 if (not np.isnan(m) and m >= 0) else 30
+    # ── Range Y esplicito ──────────────────────────────────────────────────────
+    # textposition="outside" piazza le etichette OLTRE il bordo della barra:
+    # • sopra la barra per valori positivi
+    # • SOTTO la barra per valori negativi
+    # Senza un range Y esplicito, Plotly non include lo spazio per il testo
+    # fuori dalla barra → le etichette vengono clippate e sembrano mancanti.
+    # Calcoliamo il range includendo P25, P75 e un padding del 60% su entrambi
+    # i lati per garantire la visibilità in qualsiasi scenario (tutto positivo,
+    # tutto negativo, o misto).
+    valid_all = [v for v in list(means) + list(p25) + list(p75) if not np.isnan(v)]
+    y_data_min = min(valid_all) if valid_all else -5.0
+    y_data_max = max(valid_all) if valid_all else 5.0
+    data_span  = max(abs(y_data_min), abs(y_data_max), 1.0)
 
-        annotations.append(dict(
-            x=h, y=m if not np.isnan(m) else 0,
-            text=label,
-            showarrow=False,
-            yanchor="bottom" if (not np.isnan(m) and m >= 0) else "top",
-            font=dict(size=10, color=COLORS["text"]),
-            bgcolor="rgba(42,42,62,0.7)",
-            bordercolor=bar_colors[i],
-            borderwidth=1,
-            borderpad=3,
-        ))
+    # 60% di padding simmetrico: ampio a sufficienza per etichette testo
+    # sia sopra barre positive che sotto barre negative
+    y_pad = max(data_span * 0.60, 8.0)
+    y_range = [y_data_min - y_pad, y_data_max + y_pad]
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
@@ -371,6 +353,9 @@ def build_forward_returns_bar(
             thickness=1.8,
             width=7,
         ),
+        text=text_labels,
+        textposition="outside",
+        textfont=dict(size=10, color=COLORS["text"]),
         hovertemplate=(
             "<b>Orizzonte: %{x}</b><br>"
             "Media: %{y:.2f}%<br>"
@@ -386,7 +371,6 @@ def build_forward_returns_bar(
         y_title="Rendimento Semplice (%)",
     )
     layout["yaxis"]["range"] = y_range
-    layout["annotations"] = annotations
 
     fig.update_layout(**layout)
     fig.update_layout(height=460, showlegend=False)
@@ -469,7 +453,148 @@ def build_distribution_chart(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5. HEATMAP CONDIZIONALE (regime VIX × orizzonte)
+# 5. TIMELINE SEGNALI (scatter su asse tempo)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_signal_timeline(
+    fwd_returns: pd.DataFrame,
+    horizon_key: str = "vix_ret_20d",
+    horizon_label: str = "20d",
+) -> go.Figure:
+    """
+    Scatter plot cronologico di tutti i segnali VVIX.
+
+    Asse X: data del segnale.
+    Asse Y: VIX al momento del segnale (mostra il regime).
+    Colore barra/punto: rosso = Overbought, verde = Oversold.
+    Dimensione punto: proporzionale al valore assoluto del rendimento VIX forward.
+    Testo hover: data, tipo, zScore, VIX@signal, rendimento VIX e SPX scelto.
+
+    Args:
+        fwd_returns:  Output di compute_forward_returns.
+        horizon_key:  Colonna del rendimento da usare per la dimensione (default vix_ret_20d).
+        horizon_label: Label leggibile per il titolo.
+
+    Returns:
+        go.Figure con altezza 380px.
+    """
+    if fwd_returns.empty:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Nessun segnale nel dataset.",
+            xref="paper", yref="paper", x=0.5, y=0.5,
+            showarrow=False, font=dict(size=14, color=COLORS["neutral"]),
+        )
+        fig.update_layout(**_base_layout("Timeline Segnali VVIX"), height=380)
+        return fig
+
+    ob = fwd_returns[fwd_returns["signal"] == "overbought"].copy()
+    os_ = fwd_returns[fwd_returns["signal"] == "oversold"].copy()
+
+    def _marker_size(series: pd.Series, base: float = 12.0, scale: float = 0.6) -> list:
+        """Scala la dimensione del punto sul valore assoluto del rendimento."""
+        sizes = []
+        for v in series:
+            if np.isnan(v):
+                sizes.append(base)
+            else:
+                sizes.append(max(base, min(base + abs(v) * scale, 35.0)))
+        return sizes
+
+    fig = go.Figure()
+
+    # Overbought
+    if not ob.empty:
+        ret_ob = ob[horizon_key] if horizon_key in ob.columns else pd.Series([np.nan] * len(ob))
+        spx_key = horizon_key.replace("vix_", "spx_")
+        spx_ob  = ob[spx_key] if spx_key in ob.columns else pd.Series([np.nan] * len(ob))
+        fig.add_trace(go.Scatter(
+            x=ob.index,
+            y=ob["vix_at_signal"],
+            name="Overbought",
+            mode="markers",
+            marker=dict(
+                symbol="triangle-up",
+                size=_marker_size(ret_ob),
+                color=COLORS["ob_marker"],
+                opacity=0.85,
+                line=dict(color="white", width=0.5),
+            ),
+            customdata=np.column_stack([
+                ob["zscore"].values,
+                ret_ob.values if hasattr(ret_ob, "values") else [np.nan] * len(ob),
+                spx_ob.values if hasattr(spx_ob, "values") else [np.nan] * len(ob),
+            ]),
+            hovertemplate=(
+                "<b>🔴 Overbought</b><br>"
+                "Data: %{x|%Y-%m-%d}<br>"
+                "VIX @ segnale: %{y:.2f}<br>"
+                "Log-ZScore: %{customdata[0]:.3f}<br>"
+                f"VIX {horizon_label} fwd: %{{customdata[1]:+.2f}}%<br>"
+                f"SPX {horizon_label} fwd: %{{customdata[2]:+.2f}}%"
+                "<extra></extra>"
+            ),
+        ))
+
+    # Oversold
+    if not os_.empty:
+        ret_os = os_[horizon_key] if horizon_key in os_.columns else pd.Series([np.nan] * len(os_))
+        spx_key = horizon_key.replace("vix_", "spx_")
+        spx_os  = os_[spx_key] if spx_key in os_.columns else pd.Series([np.nan] * len(os_))
+        fig.add_trace(go.Scatter(
+            x=os_.index,
+            y=os_["vix_at_signal"],
+            name="Oversold",
+            mode="markers",
+            marker=dict(
+                symbol="triangle-down",
+                size=_marker_size(ret_os),
+                color=COLORS["os_marker"],
+                opacity=0.85,
+                line=dict(color="white", width=0.5),
+            ),
+            customdata=np.column_stack([
+                os_["zscore"].values,
+                ret_os.values if hasattr(ret_os, "values") else [np.nan] * len(os_),
+                spx_os.values if hasattr(spx_os, "values") else [np.nan] * len(os_),
+            ]),
+            hovertemplate=(
+                "<b>🟢 Oversold</b><br>"
+                "Data: %{x|%Y-%m-%d}<br>"
+                "VIX @ segnale: %{y:.2f}<br>"
+                "Log-ZScore: %{customdata[0]:.3f}<br>"
+                f"VIX {horizon_label} fwd: %{{customdata[1]:+.2f}}%<br>"
+                f"SPX {horizon_label} fwd: %{{customdata[2]:+.2f}}%"
+                "<extra></extra>"
+            ),
+        ))
+
+    # Linee regime VIX
+    for y_val, label, color in [
+        (15, "VIX 15", "#555577"),
+        (20, "VIX 20", "#665544"),
+        (30, "VIX 30", "#774444"),
+    ]:
+        fig.add_hline(
+            y=y_val, line_dash="dot", line_color=color, line_width=1.0,
+            annotation_text=label, annotation_font_color=color,
+            annotation_position="right",
+        )
+
+    fig.update_layout(**_base_layout(
+        title=f"Timeline Segnali VVIX — VIX al segnale (dim. punto ∝ |VIX ret {horizon_label}|)",
+        x_title="Data segnale",
+        y_title="VIX al segnale",
+    ))
+    fig.update_layout(height=420, legend=dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+        bgcolor="rgba(0,0,0,0)",
+    ))
+    return fig
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. HEATMAP CONDIZIONALE (regime VIX × orizzonte)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_conditional_heatmap(
