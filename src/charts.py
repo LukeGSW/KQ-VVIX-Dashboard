@@ -487,8 +487,7 @@ def build_conditional_heatmap(
             "Rendimento medio: %{z:.2f}%<extra></extra>"
         ),
         colorbar=dict(
-            title="Ret %",
-            titlefont=dict(color=COLORS["text"]),
+            title=dict(text="Ret %", font=dict(color=COLORS["text"])),
             tickfont=dict(color=COLORS["text"]),
             len=0.8,
         ),
