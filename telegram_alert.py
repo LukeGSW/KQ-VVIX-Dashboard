@@ -64,7 +64,9 @@ def main():
     elif rule4:
         signal_text = "🟡 <b>REGOLA 4 ATTIVA: VIX Pop</b>\nQuiete pre-tempesta. Possibile spike VIX a 5-15 gg."
 
+    # COSTRUZIONE DEL MESSAGGIO (viene costruito sempre, in ogni caso)
     if signal_text:
+        # Messaggio se c'è un Allarme
         message = (
             f"🔔 <b>Kriterion Quant - VVIX Alert</b> 🔔\n\n"
             f"Data: {last_date}\n"
@@ -76,9 +78,23 @@ def main():
             f"• Log-zScore: <b>{curr_z:.3f}</b>\n\n"
             f"<i>Soglie: OB {upper_thresh} | OS {lower_thresh} | Finestra: {window}gg</i>"
         )
-        send_telegram_message(bot_token, chat_id, message)
     else:
+        # Messaggio "Daily Recap" inviato nei giorni normali senza setup
         print(f"Nessuna regola attiva ({last_date}). Z-Score: {curr_z:.3f}, VIX: {curr_vix:.2f}.")
+        message = (
+            f"ℹ️ <b>Kriterion Quant - Daily Recap</b>\n\n"
+            f"Data: {last_date}\n"
+            f"Nessun setup VVIX estremo registrato oggi.\n\n"
+            f"📊 <b>Dati di chiusura:</b>\n"
+            f"• VVIX: {curr_vvix:.2f}\n"
+            f"• VIX: {curr_vix:.2f}\n"
+            f"• S&P 500: {curr_spx:.2f}\n"
+            f"• Log-zScore: <b>{curr_z:.3f}</b>\n\n"
+            f"<i>(Mercato in regime neutro)</i>"
+        )
+
+    # INVIO SU TELEGRAM (eseguito SEMPRE, sia che ci sia un alert sia che ci sia il recap)
+    send_telegram_message(bot_token, chat_id, message)
 
 if __name__ == "__main__":
     main()
