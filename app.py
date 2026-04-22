@@ -215,7 +215,7 @@ c5.metric("Segnale",   signal_txt)
 # Mini-chart log-zScore ultimo anno
 zscore_clean = zscore.dropna()
 fig_recent   = build_zscore_recent(zscore_clean, upper_thresh, lower_thresh, lookback=252)
-st.plotly_chart(fig_recent, use_container_width=True)
+st.plotly_chart(fig_recent, width='stretch')
 
 # Riepilogo dataset
 col_a, col_b, col_c, col_d = st.columns(4)
@@ -242,7 +242,7 @@ in cui lo z-score supera la soglia overbought.
 """)
 
 fig_main = build_vvix_chart(df, zscore_clean, events, upper_thresh, lower_thresh)
-st.plotly_chart(fig_main, use_container_width=True)
+st.plotly_chart(fig_main, width='stretch')
 
 with st.expander("ℹ️ Metodologia — Log-ZScore e Anti-Clustering"):
     st.markdown(f"""
@@ -301,7 +301,7 @@ with tab_ob:
         stats_ob_spx = compute_summary_stats(fwd_returns, "overbought", "spx", HORIZONS)
         st.plotly_chart(
             build_forward_returns_bar(stats_ob_spx, "overbought", "SPX"),
-            use_container_width=True,
+            width='stretch',
         )
         _fmt_ob_spx = {
             "Media %": "{:+.2f}", "Mediana %": "{:+.2f}",
@@ -313,13 +313,13 @@ with tab_ob:
             stats_ob_spx.style
                 .format(_fmt_ob_spx)
                 .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            use_container_width=True,
+            width='stretch',
         )
 
         # Distribuzione SPX OB
         st.plotly_chart(
             build_distribution_chart(fwd_returns, "overbought", "spx", distr_horizon),
-            use_container_width=True,
+            width='stretch',
         )
 
         st.markdown("---")
@@ -329,17 +329,17 @@ with tab_ob:
         stats_ob_vix = compute_summary_stats(fwd_returns, "overbought", "vix", HORIZONS)
         st.plotly_chart(
             build_forward_returns_bar(stats_ob_vix, "overbought", "VIX"),
-            use_container_width=True,
+            width='stretch',
         )
         st.dataframe(
             stats_ob_vix.style
                 .format(_fmt_ob_spx)
                 .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            use_container_width=True,
+            width='stretch',
         )
         st.plotly_chart(
             build_distribution_chart(fwd_returns, "overbought", "vix", distr_horizon),
-            use_container_width=True,
+            width='stretch',
         )
 
 # ── Tab Oversold ──
@@ -358,7 +358,7 @@ with tab_os:
         stats_os_spx = compute_summary_stats(fwd_returns, "oversold", "spx", HORIZONS)
         st.plotly_chart(
             build_forward_returns_bar(stats_os_spx, "oversold", "SPX"),
-            use_container_width=True,
+            width='stretch',
         )
         _fmt_os = {
             "Media %": "{:+.2f}", "Mediana %": "{:+.2f}",
@@ -370,11 +370,11 @@ with tab_os:
             stats_os_spx.style
                 .format(_fmt_os)
                 .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            use_container_width=True,
+            width='stretch',
         )
         st.plotly_chart(
             build_distribution_chart(fwd_returns, "oversold", "spx", distr_horizon),
-            use_container_width=True,
+            width='stretch',
         )
 
         st.markdown("---")
@@ -384,17 +384,17 @@ with tab_os:
         stats_os_vix = compute_summary_stats(fwd_returns, "oversold", "vix", HORIZONS)
         st.plotly_chart(
             build_forward_returns_bar(stats_os_vix, "oversold", "VIX"),
-            use_container_width=True,
+            width='stretch',
         )
         st.dataframe(
             stats_os_vix.style
                 .format(_fmt_os)
                 .background_gradient(subset=["Media %", "Hit Rate %"], cmap="RdYlGn"),
-            use_container_width=True,
+            width='stretch',
         )
         st.plotly_chart(
             build_distribution_chart(fwd_returns, "oversold", "vix", distr_horizon),
-            use_container_width=True,
+            width='stretch',
         )
 
 st.divider()
@@ -439,14 +439,14 @@ with tab_cond_ob:
             tbl_ob_spx = compute_conditional_stats(fwd_returns, "overbought", "spx", HORIZONS)
             st.plotly_chart(
                 build_conditional_heatmap(hm_ob_spx, "overbought", "spx"),
-                use_container_width=True,
+                width='stretch',
             )
             horizon_cols_ob = [c for c in tbl_ob_spx.columns if c != "N eventi"]
             st.dataframe(
                 tbl_ob_spx.style.format(
                     {c: "{:+.2f}" for c in horizon_cols_ob}
                 ),
-                use_container_width=True,
+                width='stretch',
             )
 
         with col_h2:
@@ -455,14 +455,14 @@ with tab_cond_ob:
             tbl_ob_vix = compute_conditional_stats(fwd_returns, "overbought", "vix", HORIZONS)
             st.plotly_chart(
                 build_conditional_heatmap(hm_ob_vix, "overbought", "vix"),
-                use_container_width=True,
+                width='stretch',
             )
             horizon_cols_ob_v = [c for c in tbl_ob_vix.columns if c != "N eventi"]
             st.dataframe(
                 tbl_ob_vix.style.format(
                     {c: "{:+.2f}" for c in horizon_cols_ob_v}
                 ),
-                use_container_width=True,
+                width='stretch',
             )
 
 # ── Conditional Oversold ──
@@ -478,14 +478,14 @@ with tab_cond_os:
             tbl_os_spx = compute_conditional_stats(fwd_returns, "oversold", "spx", HORIZONS)
             st.plotly_chart(
                 build_conditional_heatmap(hm_os_spx, "oversold", "spx"),
-                use_container_width=True,
+                width='stretch',
             )
             horizon_cols_os = [c for c in tbl_os_spx.columns if c != "N eventi"]
             st.dataframe(
                 tbl_os_spx.style.format(
                     {c: "{:+.2f}" for c in horizon_cols_os}
                 ),
-                use_container_width=True,
+                width='stretch',
             )
 
         with col_h4:
@@ -494,14 +494,14 @@ with tab_cond_os:
             tbl_os_vix = compute_conditional_stats(fwd_returns, "oversold", "vix", HORIZONS)
             st.plotly_chart(
                 build_conditional_heatmap(hm_os_vix, "oversold", "vix"),
-                use_container_width=True,
+                width='stretch',
             )
             horizon_cols_os_v = [c for c in tbl_os_vix.columns if c != "N eventi"]
             st.dataframe(
                 tbl_os_vix.style.format(
                     {c: "{:+.2f}" for c in horizon_cols_os_v}
                 ),
-                use_container_width=True,
+                width='stretch',
             )
 
 # ═══════════════════════════════════════════════════════════════════════════════
