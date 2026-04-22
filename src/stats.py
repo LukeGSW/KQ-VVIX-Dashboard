@@ -81,6 +81,61 @@ def compute_summary_stats(
     return pd.DataFrame(rows).set_index("Orizzonte")
 
 
+def compute_subset_stats(
+    subset: pd.DataFrame,
+    asset: str,
+    horizons: list = None,
+) -> pd.DataFrame:
+    """
+    Calcola statistiche descrittive su un sottoinsieme già filtrato di fwd_returns.
+
+    Identica a compute_summary_stats ma accetta un subset pre-filtrato anziché
+    filtrare per signal_type. Utile per analisi di sotto-regole (es. OB con VIX 15–30).
+
+    Args:
+        subset:   Subset di fwd_returns già filtrato (signal, vix_at_signal, ecc.).
+        asset:    'spx' | 'vix'.
+        horizons: Lista orizzonti in giorni (default: HORIZONS).
+
+    Returns:
+        pd.DataFrame con le stesse colonne di compute_summary_stats.
+    """
+    if horizons is None:
+        horizons = HORIZONS
+
+    rows = []
+    for h in horizons:
+        col = f"{asset}_ret_{h}d"
+        if col not in subset.columns:
+            rows.append(_empty_row(f"{h}d"))
+            continue
+
+        series = subset[col].dropna()
+        n = len(series)
+
+        if n == 0:
+            rows.append(_empty_row(f"{h}d"))
+            continue
+
+        pos_sum = series[series > 0].sum()
+        neg_sum = abs(series[series < 0].sum())
+        profit_factor = (pos_sum / neg_sum) if neg_sum > 0 else np.inf
+
+        rows.append({
+            "Orizzonte":     f"{h}d",
+            "N":             n,
+            "Media %":       round(series.mean(), 2),
+            "Mediana %":     round(series.median(), 2),
+            "P25 %":         round(series.quantile(0.25), 2),
+            "P75 %":         round(series.quantile(0.75), 2),
+            "Std Dev %":     round(series.std(ddof=1), 2),
+            "Hit Rate %":    round((series > 0).mean() * 100, 1),
+            "Profit Factor": round(profit_factor, 2),
+        })
+
+    return pd.DataFrame(rows).set_index("Orizzonte")
+
+
 def _empty_row(label: str) -> dict:
     """Riga vuota (NaN) per orizzonti senza dati sufficienti."""
     return {
